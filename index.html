@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PsCam</title> <!-- Cambio del título del sitio web -->
+<link rel="icon" href="https://www.shareicon.net/data/2015/09/25/106996_ps-vita_512x512.png" type="image/png"> <!-- Agregando el ícono -->
+<style>
+  body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #000;
+    overflow: hidden; /* Evitar que la animación revele contenido antes de tiempo */
+    position: relative;
+  }
+
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0; /* Comienza con el video invisible */
+  }
+
+  #cameraButton {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    opacity: 0; /* Comienza con el botón invisible */
+    transition: opacity 0.3s;
+  }
+
+  #cameraButton:hover {
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+<video id="videoElement" autoplay></video>
+<button id="cameraButton" onmouseover="showButton()" onmouseout="hideButton()" onclick="changeCamera()">Cambiar Cámara</button>
+
+<script>
+var currentCamera = 0; // Índice de la cámara actual
+var buttonVisible = false; // Estado del botón
+
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(function (stream) {
+    var videoElement = document.getElementById('videoElement');
+    videoElement.srcObject = stream;
+    fadeIn(videoElement); // Agregar la animación gradual aquí
+  })
+  .catch(function (error) {
+    console.error('Error al acceder a la cámara:', error);
+  });
+
+// Función para hacer aparecer gradualmente el video
+function fadeIn(element) {
+  var opacity = 0;
+  var interval = setInterval(function() {
+    if (opacity < 1) {
+      opacity += 0.05;
+      element.style.opacity = opacity;
+    } else {
+      clearInterval(interval);
+    }
+  }, 100);
+}
+
+// Función para mostrar el botón
+function showButton() {
+  if (!buttonVisible) {
+    var button = document.getElementById('cameraButton');
+    button.style.opacity = 1;
+    buttonVisible = true;
+  }
+}
+
+// Función para ocultar el botón
+function hideButton() {
+  if (buttonVisible) {
+    var button = document.getElementById('cameraButton');
+    button.style.opacity = 0;
+    buttonVisible = false;
+  }
+}
+
+// Función para cambiar la cámara
+function changeCamera() {
+  currentCamera = (currentCamera + 1) % 2; // Cambiar entre 0 y 1
+  var videoElement = document.getElementById('videoElement');
+  videoElement.srcObject.getTracks().forEach(function(track) {
+    track.stop(); // Detener la cámara actual
+  });
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: (currentCamera === 0 ? 'user' : 'environment') } })
+    .then(function (stream) {
+      videoElement.srcObject = stream; // Cambiar a la nueva cámara
+    })
+    .catch(function (error) {
+      console.error('Error al acceder a la cámara:', error);
+    });
+}
+</script>
+</body>
+</html>
